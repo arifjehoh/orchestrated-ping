@@ -2,4 +2,4 @@ module github.com/arifjehoh/orchestrated-ping
 
 go 1.21
 
-require github.com/go-chi/chi/v5 v5.0.11
+require github.com/go-chi/chi/v5 v5.2.3

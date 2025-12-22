@@ -1,92 +1,72 @@
 package main
 
 import (
-	"encoding/json"
-	"log"
-	"net/http"
+	"context"
+	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/arifjehoh/orchestrated-ping/internal/config"
+	"github.com/arifjehoh/orchestrated-ping/internal/handlers"
+	"github.com/arifjehoh/orchestrated-ping/internal/logger"
+	"github.com/arifjehoh/orchestrated-ping/internal/server"
 )
 
-type Response struct {
-	Status  string    `json:"status"`
-	Message string    `json:"message"`
-	Time    time.Time `json:"time"`
-}
-
-type HealthResponse struct {
-	Status string `json:"status"`
-	Uptime string `json:"uptime"`
-}
-
-var startTime time.Time
-
 func main() {
-	startTime = time.Now()
-	
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		slog.Error("failed to load configuration", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
-	r := chi.NewRouter()
+	// Initialize logger
+	log := logger.New(cfg)
+	slog.SetDefault(log)
 
-	// Middleware
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(60 * time.Second))
+	// Record start time for uptime tracking
+	startTime := time.Now()
 
-	// Routes
-	r.Get("/ping", handlePing)
-	r.Get("/health", handleHealth)
-	r.Get("/ready", handleReady)
+	// Initialize handlers with dependencies
+	handler := handlers.New(log, startTime)
 
-	log.Printf("Starting server on port %s", port)
-	if err := http.ListenAndServe(":"+port, r); err != nil {
-		log.Fatal(err)
+	// Create and start server
+	srv := server.New(cfg, log, handler)
+
+	// Log application startup
+	log.Info("application starting",
+		slog.String("service", cfg.Service.Name),
+		slog.String("version", cfg.Service.Version),
+		slog.String("environment", cfg.Environment),
+		slog.String("port", cfg.Server.Port),
+	)
+
+	// Start server in a goroutine
+	go func() {
+		if err := srv.Start(); err != nil {
+			log.Error("server failed to start", slog.String("error", err.Error()))
+			os.Exit(1)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Info("received shutdown signal")
+
+	// Create shutdown context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
+	defer cancel()
+
+	// Attempt graceful shutdown
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Error("server forced to shutdown", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
-}
 
-func handlePing(w http.ResponseWriter, r *http.Request) {
-	response := Response{
-		Status:  "success",
-		Message: "pong",
-		Time:    time.Now(),
-	}
-	
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
-}
-
-func handleHealth(w http.ResponseWriter, r *http.Request) {
-	uptime := time.Since(startTime).String()
-	
-	response := HealthResponse{
-		Status: "healthy",
-		Uptime: uptime,
-	}
-	
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
-}
-
-func handleReady(w http.ResponseWriter, r *http.Request) {
-	// In a real application, you might check database connections,
-	// external service availability, etc.
-	response := Response{
-		Status:  "ready",
-		Message: "application is ready to serve traffic",
-		Time:    time.Now(),
-	}
-	
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	log.Info("server stopped gracefully")
 }

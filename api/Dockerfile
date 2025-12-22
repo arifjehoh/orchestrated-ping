@@ -9,8 +9,8 @@ COPY go.mod go.sum* ./
 # Download dependencies
 RUN go mod download
 
-# Copy source code
-COPY main.go ./
+# Copy entire source tree
+COPY . .
 
 # Build the binary with optimizations
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -o app main.go
