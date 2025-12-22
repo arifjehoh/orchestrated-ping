@@ -18,6 +18,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      security-events: write
 
     steps:
     - uses: actions/checkout@v4
@@ -47,8 +48,14 @@ jobs:
           type=raw,value=latest,enable={{is_default_branch}}
         flavor: |
           latest=auto
+        labels: |
+          org.opencontainers.image.title=Orchestrated Ping API
+          org.opencontainers.image.description=Cloud-native ping-pong REST service
+          org.opencontainers.image.vendor=arifjehoh
+          org.opencontainers.image.licenses=MIT
     
     - name: Build and push Docker image
+      id: build
       uses: docker/build-push-action@v5
       with:
         context: ./api
@@ -58,3 +65,40 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+    
+    - name: Upload Trivy results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+    
+    - name: Run Trivy vulnerability scanner (Table output)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ghcr.io/${{ github.repository }}:${{ steps.meta.outputs.version }}
+        format: 'table'
+        severity: 'CRITICAL,HIGH'
+  
+  cleanup:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: build
+    permissions:
+      packages: write
+    
+    steps:
+    - name: Delete old container images
+      uses: actions/delete-package-versions@v5
+      with:
+        package-name: 'orchestrated-ping'
+        package-type: 'container'
+        min-versions-to-keep: 3
+        delete-only-untagged-versions: 'true'

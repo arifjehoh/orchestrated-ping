@@ -58,12 +58,12 @@ graph TD
    - Configure container security best practices
    - Test container locally
 
-3. **CI/CD Pipeline**
-   - ✅ Set up GitHub Actions workflow
-   - Automate testing, building, and pushing images
+3. ✅ **CI/CD Pipeline**
+   - Set up GitHub Actions workflow
+   - Automate building and pushing images
    - Implement semantic versioning for images
 
-4. **Container Registry**
+4. ✅ **Container Registry**
    - Configure Docker Hub or GitHub Container Registry
    - Set up image scanning for vulnerabilities
    - Implement retention policies
