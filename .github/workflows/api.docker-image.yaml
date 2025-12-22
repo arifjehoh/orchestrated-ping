@@ -19,10 +19,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
-    defaults:
-      run:
-        working-directory: ./api
 
     steps:
     - uses: actions/checkout@v4
@@ -50,8 +46,8 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: ./Dockerfile
+        context: ./api
+        file: ./api/Dockerfile
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
