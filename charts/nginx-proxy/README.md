@@ -82,6 +82,7 @@ All endpoints are proxied from go-ping:
 ### Basic installation:
 ```bash
 helm install nginx-proxy ./charts/nginx-proxy
+kubectl port-forward svc/nginx-proxy 8081:80 &
 ```
 
 ### With custom backend:

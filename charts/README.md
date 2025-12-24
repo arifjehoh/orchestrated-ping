@@ -162,6 +162,32 @@ Both charts follow Helm best practices:
 
 ## Usage Patterns
 
+### Prerequisites
+- **Kubernetes Cluster**: Minikube, KinD, or cloud provider
+- **Helm 3.x**: Installed and configured
+- **kubectl**: Configured to access your cluster
+
+#### Starting a Local Cluster with KinD
+
+```bash
+kind create cluster --name orchestrated-ping
+kubectl cluster-info --context kind-orchestrated-ping
+```
+
+#### Start the chart deployments
+
+```bash
+# 1. Deploy go-ping application
+helm install go-ping ./charts/go-ping
+# 1a. (Optional) Port-forward to access go-ping directly
+kubectl port-forward svc/go-ping 8080:8080 &
+
+# 2. (Optional) Deploy NGINX proxy
+helm install nginx-proxy ./charts/nginx-proxy
+# 2a. Port-forward to access services
+kubectl port-forward svc/nginx-proxy 8081:80 &
+```
+
 ### Development Workflow
 
 ```bash
