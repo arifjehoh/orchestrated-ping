@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nginx-proxy.fullname" . }}
+  labels:
+    {{- include "nginx-proxy.labels" . | nindent 4 }}
+data:
+  nginx.conf: |
+    user nginx;
+    worker_processes {{ .Values.nginx.workerProcesses }};
+    error_log /var/log/nginx/error.log warn;
+    pid /tmp/nginx.pid;
+
+    events {
+        worker_connections {{ .Values.nginx.workerConnections }};
+    }
+
+    http {
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+
+        log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                        '$status $body_bytes_sent "$http_referer" '
+                        '"$http_user_agent" "$http_x_forwarded_for"';
+
+        access_log /var/log/nginx/access.log main;
+
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 65;
+        types_hash_max_size 2048;
+        client_max_body_size {{ .Values.nginx.clientMaxBodySize }};
+
+        # Temp paths for read-only root filesystem
+        client_body_temp_path /tmp/client_body;
+        proxy_temp_path /tmp/proxy;
+        fastcgi_temp_path /tmp/fastcgi;
+        uwsgi_temp_path /tmp/uwsgi;
+        scgi_temp_path /tmp/scgi;
+
+        # Upstream backend
+        upstream go_ping_backend {
+            server {{ include "nginx-proxy.backendAddress" . }};
+        }
+
+        server {
+            listen 80;
+            server_name _;
+
+            # Proxy all requests to go-ping backend
+            location / {
+                proxy_pass http://go_ping_backend;
+                proxy_http_version 1.1;
+                
+                # Proxy headers
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-Forwarded-Host $host;
+                proxy_set_header X-Forwarded-Port $server_port;
+                
+                # Timeouts
+                proxy_connect_timeout {{ .Values.nginx.proxyConnectTimeout }};
+                proxy_read_timeout {{ .Values.nginx.proxyReadTimeout }};
+                proxy_send_timeout {{ .Values.nginx.proxySendTimeout }};
+                
+                # Buffering
+                proxy_buffering on;
+                proxy_buffer_size 4k;
+                proxy_buffers 8 4k;
+                proxy_busy_buffers_size 8k;
+            }
+
+            # Health check endpoint (proxied to backend)
+            location /health {
+                access_log off;
+                proxy_pass http://go_ping_backend/health;
+                proxy_http_version 1.1;
+                proxy_set_header Host $host;
+            }
+
+            # Readiness check endpoint (proxied to backend)
+            location /ready {
+                access_log off;
+                proxy_pass http://go_ping_backend/ready;
+                proxy_http_version 1.1;
+                proxy_set_header Host $host;
+            }
+
+            # NGINX stub status (internal monitoring)
+            location /nginx-health {
+                access_log off;
+                return 200 "healthy\n";
+                add_header Content-Type text/plain;
+            }
+        }
+    }
