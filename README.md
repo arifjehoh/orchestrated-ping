@@ -90,11 +90,16 @@ graph TD
    - Configure Grafana dashboards
    - Set up alerts for critical metrics
 
-9. **Optional: Infrastructure as Code**
+9. **K6 Load Testing (Optional)**
+   - Create K6 scripts for load testing
+   - Integrate K6 into CI/CD pipeline
+   - Analyze performance metrics
+
+10. **Optional: Infrastructure as Code**
    - Define cluster infrastructure with Terraform
    - Manage cloud resources declaratively
 
-10. **Optional: GitOps with ArgoCD**
+11. **Optional: GitOps with ArgoCD**
     - Set up ArgoCD for continuous deployment
     - Configure automatic sync from Git repository
 
