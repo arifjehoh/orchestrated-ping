@@ -1,0 +1,153 @@
+# Docker image, fetched from github container registry or locally built
+image:
+  repository: ghcr.io/arifjehoh/orchestrated-ping
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Replica count
+replicaCount: 1
+
+# Environment variables for the application
+env:
+  # Application environment (development, staging, production)
+  environment: "production"
+  # Server port (must match service.targetPort)
+  port: "8080"
+  # HTTP read timeout
+  readTimeout: "15s"
+  # HTTP write timeout
+  writeTimeout: "15s"
+  # Graceful shutdown timeout
+  shutdownTimeout: "30s"
+
+# Additional environment variables from secrets or configmaps
+envFrom: []
+  # - secretRef:
+  #     name: app-secrets
+  # - configMapRef:
+  #     name: app-config
+
+# Liveness probe configuration
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 3
+
+# Readiness probe configuration
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /ready
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  successThreshold: 1
+  failureThreshold: 3
+
+# Resources configuration
+resources:
+  limits:
+    cpu: 20m
+    memory: 20Mi
+  requests:
+    cpu: 20m
+    memory: 20Mi
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+  # Service annotations (e.g., for load balancer configuration)
+  annotations: {}
+
+# Ingress configuration - expose service outside the cluster
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: orchestrated-ping.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+    # - secretName: orchestrated-ping-tls
+    #   hosts:
+    #     - orchestrated-ping.example.com
+
+# Pod annotations
+podAnnotations: {}
+  # prometheus.io/scrape: "true"
+  # prometheus.io/port: "8080"
+  # prometheus.io/path: "/metrics"
+
+# Pod labels
+podLabels: {}
+
+# Security context for the pod
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  fsGroup: 65534
+
+# Security context for the container
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65534
+  capabilities:
+    drop:
+      - ALL
+
+# Service account
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# Autoscaling configuration
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  # maxUnavailable: 1
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
+
+# Priority class name
+priorityClassName: ""
+
+# Additional volumes
+volumes: []
+
+# Additional volume mounts
+volumeMounts: []
