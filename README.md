@@ -68,20 +68,22 @@ graph TD
    - Set up image scanning for vulnerabilities
    - Implement retention policies
 
-5. **Helm Charts**
-   - Create Helm chart structure
+5. ✅ **Helm Charts**
+   - Create Helm chart structure (go-ping + nginx-proxy charts)
    - Define deployment, service, and ingress resources
    - Configure values for different environments
+   - Add security contexts, health probes, and HPA support
+   - Multi-architecture image support (AMD64 + ARM64)
 
-6. **Local Kubernetes Setup**
+6. ✅ **Local Kubernetes Setup**
    - Deploy KinD cluster
-   - Configure local registry (optional)
+   - ⏭️ Configure local registry (optional - skipped)
    - Set up kubectl context
 
-7. **Application Deployment**
-   - Deploy application using Helm
-   - Configure service exposure
-   - Test connectivity
+7. ✅ **Application Deployment**
+   - Deploy application using Helm (go-ping + nginx-proxy)
+   - Configure service exposure (ClusterIP, LoadBalancer)
+   - Test connectivity (all endpoints verified via port-forward and proxy)
 
 8. **Monitoring Setup**
    - Deploy Prometheus for metrics collection
