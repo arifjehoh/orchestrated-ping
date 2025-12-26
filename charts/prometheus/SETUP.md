@@ -76,12 +76,6 @@ var (
         Name: "app_uptime_seconds",
         Help: "Application uptime in seconds",
     })
-
-    // Ping requests counter
-    PingRequestsTotal = promauto.NewCounter(prometheus.CounterOpts{
-        Name: "ping_requests_total",
-        Help: "Total number of ping requests",
-    })
 )
 ```
 
@@ -190,14 +184,14 @@ curl http://localhost:8080/metrics
 for i in {1..10}; do curl http://localhost:8080/ping; done
 
 # Check metrics again
-curl http://localhost:8080/metrics | grep ping_requests_total
+curl http://localhost:8080/metrics | grep http_requests_total
 ```
 
 **Expected output:**
 ```
 # HELP ping_requests_total Total number of ping requests
 # TYPE ping_requests_total counter
-ping_requests_total 10
+http_requests_total{endpoint="/ping",method="GET",status="200"} 10
 ```
 
 ### Step 2: Install Prometheus using Helm
@@ -418,7 +412,7 @@ up{kubernetes_pod_name=~"go-ping.*"}
 rate(http_requests_total[5m])
 
 # Total ping requests
-ping_requests_total
+http_requests_total
 
 # Request duration p95
 histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
