@@ -85,10 +85,10 @@ graph TD
    - Configure service exposure (ClusterIP, LoadBalancer)
    - Test connectivity (all endpoints verified via port-forward and proxy)
 
-8. **Monitoring Setup**
+8. ✅ **Monitoring Setup**
    - Deploy Prometheus for metrics collection
    - Configure Grafana dashboards
-   - Set up alerts for critical metrics
+   - ⏭️ Set up alerts for critical metrics (skipped, didn't go through that much on how to setup the alerts)
 
 9. **OpenTelemetry Migration (Advanced/Optional)**
    - Migrate from Prometheus client to OpenTelemetry SDK
