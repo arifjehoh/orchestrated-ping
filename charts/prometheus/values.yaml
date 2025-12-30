@@ -66,8 +66,8 @@ serverFiles:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
             regex: true
-          # Use the port from prometheus.io/port annotation
-          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+          # Use the pod IP and port from prometheus.io/port annotation
+          - source_labels: [__meta_kubernetes_pod_ip, __meta_kubernetes_pod_annotation_prometheus_io_port]
             action: replace
             target_label: __address__
             regex: ([^:]+)(?::\d+)?;(\d+)
