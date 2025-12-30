@@ -11,6 +11,7 @@ import (
 	"github.com/arifjehoh/orchestrated-ping/internal/config"
 	"github.com/arifjehoh/orchestrated-ping/internal/handlers"
 	"github.com/arifjehoh/orchestrated-ping/internal/logger"
+	"github.com/arifjehoh/orchestrated-ping/internal/metrics"
 	"github.com/arifjehoh/orchestrated-ping/internal/server"
 )
 
@@ -28,6 +29,16 @@ func main() {
 
 	// Record start time for uptime tracking
 	startTime := time.Now()
+
+	go func() {
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			uptime := time.Since(startTime).Seconds()
+			// Update the uptime metric
+			metrics.AppUptime.Set(uptime)
+		}
+	}()
 
 	// Initialize handlers with dependencies
 	handler := handlers.New(log, startTime)

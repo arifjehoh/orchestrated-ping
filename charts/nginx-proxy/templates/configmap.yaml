@@ -89,11 +89,26 @@ data:
                 proxy_set_header Host $host;
             }
 
+            # Metrics endpoint (proxied to backend)
+            location /metrics {
+                access_log off;
+                proxy_pass http://go_ping_backend/metrics;
+                proxy_http_version 1.1;
+                proxy_set_header Host $host;
+            }
+
             # NGINX stub status (internal monitoring)
+            location /stub_status {
+                stub_status on;
+                access_log off;
+                allow 127.0.0.1;
+                deny all;
+            }
+            
+            # NGINX health endpoint
             location /nginx-health {
                 access_log off;
                 return 200 "healthy\n";
-                add_header Content-Type text/plain;
             }
         }
     }

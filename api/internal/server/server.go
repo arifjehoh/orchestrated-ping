@@ -10,6 +10,7 @@ import (
 	"github.com/arifjehoh/orchestrated-ping/internal/handlers"
 	"github.com/arifjehoh/orchestrated-ping/internal/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
@@ -40,12 +41,14 @@ func setupRouter(logger *slog.Logger, handler *handlers.Handler) *chi.Mux {
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.RealIP)
 	r.Use(middleware.Logger(logger))
+	r.Use(middleware.Metrics())
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.Timeout(60 * time.Second))
 
 	r.Get("/ping", handler.Ping)
 	r.Get("/health", handler.Health)
 	r.Get("/ready", handler.Ready)
+	r.Handle("/metrics", promhttp.Handler())
 
 	return r
 }

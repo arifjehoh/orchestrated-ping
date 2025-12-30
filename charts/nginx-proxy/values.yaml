@@ -53,7 +53,7 @@ resources:
 livenessProbe:
   enabled: true
   httpGet:
-    path: /health
+    path: /nginx-health
     port: http
   initialDelaySeconds: 10
   periodSeconds: 10
@@ -64,15 +64,34 @@ livenessProbe:
 readinessProbe:
   enabled: true
   httpGet:
-    path: /health
+    path: /nginx-health
     port: http
   initialDelaySeconds: 5
   periodSeconds: 5
   timeoutSeconds: 3
   failureThreshold: 3
 
+# NGINX Prometheus Exporter configuration
+metrics:
+  enabled: true
+  image:
+    repository: nginx/nginx-prometheus-exporter
+    tag: 1.1.0
+    pullPolicy: IfNotPresent
+  port: 9113
+  resources:
+    limits:
+      cpu: 50m
+      memory: 32Mi
+    requests:
+      cpu: 10m
+      memory: 16Mi
+
 # Pod annotations
-podAnnotations: {}
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9113"
+  prometheus.io/path: "/metrics"
 
 # Pod labels
 podLabels: {}

@@ -85,21 +85,28 @@ graph TD
    - Configure service exposure (ClusterIP, LoadBalancer)
    - Test connectivity (all endpoints verified via port-forward and proxy)
 
-8. **Monitoring Setup**
+8. ✅ **Monitoring Setup**
    - Deploy Prometheus for metrics collection
    - Configure Grafana dashboards
-   - Set up alerts for critical metrics
+   - ⏭️ Set up alerts for critical metrics (skipped, didn't go through that much on how to setup the alerts)
 
-9. **K6 Load Testing (Optional)**
-   - Create K6 scripts for load testing
-   - Integrate K6 into CI/CD pipeline
-   - Analyze performance metrics
+9. **OpenTelemetry Migration (Advanced/Optional)**
+   - Migrate from Prometheus client to OpenTelemetry SDK
+   - Deploy OpenTelemetry Collector
+   - Enable distributed tracing with Jaeger/Tempo
+   - Unified observability (metrics + traces + logs)
+   - Maintain Prometheus/Grafana compatibility
 
-10. **Optional: Infrastructure as Code**
-   - Define cluster infrastructure with Terraform
-   - Manage cloud resources declaratively
+10. **K6 Load Testing (Optional)**
+    - Create K6 scripts for load testing
+    - Integrate K6 into CI/CD pipeline
+    - Analyze performance metrics
 
-11. **Optional: GitOps with ArgoCD**
+11. **Optional: Infrastructure as Code**
+    - Define cluster infrastructure with Terraform
+    - Manage cloud resources declaratively
+
+12. **Optional: GitOps with ArgoCD**
     - Set up ArgoCD for continuous deployment
     - Configure automatic sync from Git repository
 

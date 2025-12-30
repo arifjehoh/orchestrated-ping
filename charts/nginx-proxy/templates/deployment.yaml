@@ -30,6 +30,27 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "nginx-proxy.serviceAccountName" . }}
       containers:
+      {{- if .Values.metrics.enabled }}
+      - name: nginx-exporter
+        image: "{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
+        imagePullPolicy: {{ .Values.metrics.image.pullPolicy }}
+        args:
+          - -nginx.scrape-uri=http://127.0.0.1:80/stub_status
+        ports:
+        - name: metrics
+          containerPort: {{ .Values.metrics.port }}
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.metrics.resources | nindent 10 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 101
+          capabilities:
+            drop:
+              - ALL
+      {{- end }}
       - name: nginx
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}

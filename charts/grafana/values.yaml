@@ -1,0 +1,90 @@
+# Admin credentials
+adminUser: admin
+adminPassword: admin  # Change in production!
+
+# Resources
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Persistence (optional for development)
+persistence:
+  enabled: false
+  # Enable for production:
+  # enabled: true
+  # size: 5Gi
+  # storageClass: standard
+
+# Data sources configuration
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server:80
+      access: proxy
+      isDefault: true
+      jsonData:
+        timeInterval: 30s
+
+# Dashboard providers
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/default
+
+# Pre-load dashboards
+dashboards:
+  default:
+    # kubernetes-cluster:
+    #   gnetId: 7249
+    #   revision: 1
+    #   datasource: Prometheus
+    kubernetes-cluster:
+      url: https://grafana.com/api/dashboards/7249/revisions/1/download
+    go-ping:
+      file: dashboards/go-ping-dashboard.json
+
+# Plugins to install
+plugins: []
+  # - grafana-piechart-panel
+  # - grafana-clock-panel
+
+# Environment variables
+env: {}
+
+# Ingress (optional)
+ingress:
+  enabled: false
+  # Enable for external access:
+  # enabled: true
+  # hosts:
+  #   - grafana.example.com
+  # tls:
+  #   - secretName: grafana-tls
+  #     hosts:
+  #       - grafana.example.com
+
+# Security context
+securityContext:
+  runAsUser: 472
+  runAsGroup: 472
+  fsGroup: 472
